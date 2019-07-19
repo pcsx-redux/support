@@ -1,4 +1,6 @@
-FROM codercom/code-server:1.939
+# Dockerfile for grumpycoders/pcsx-redux-code-server
+
+FROM codercom/code-server:1.1156-vsc1.33.1
 
 USER root
 
