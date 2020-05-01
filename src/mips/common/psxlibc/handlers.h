@@ -19,11 +19,18 @@
 
 #pragma once
 
+#include <stdint.h>
+
 struct HandlerInfo;
 
 struct HandlerInfo {
     struct HandlerInfo * next;
-    void(*handler)();
+    void(*handler)(int);
     int(*verifier)();
-    uint32_t unused;
+    uint32_t padding;
+};
+
+struct HandlersStorage {
+    struct HandlerInfo * first;
+    uint32_t padding;
 };
