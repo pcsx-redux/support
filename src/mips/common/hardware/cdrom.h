@@ -1,5 +1,5 @@
 /***************************************************************************
- *   Copyright (C) 2019 PCSX-Redux authors                                 *
+ *   Copyright (C) 2020 PCSX-Redux authors                                 *
  *                                                                         *
  *   This program is free software; you can redistribute it and/or modify  *
  *   it under the terms of the GNU General Public License as published by  *
@@ -19,11 +19,9 @@
 
 #pragma once
 
-typedef signed char int8_t;
-typedef signed short int16_t;
-typedef signed int int32_t;
-typedef unsigned char uint8_t;
-typedef unsigned short uint16_t;
-typedef unsigned int uint32_t;
-typedef int32_t intptr_t;
-typedef uint32_t uintptr_t;
+#include "common/hardware/hwregs.h"
+
+#define CDROM_REG0 HW_U8(0x1f801800)
+#define CDROM_REG1 HW_U8(0x1f801801)
+#define CDROM_REG2 HW_U8(0x1f801802)
+#define CDROM_REG3 HW_U8(0x1f801803)
