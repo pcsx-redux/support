@@ -1,5 +1,5 @@
 /***************************************************************************
- *   Copyright (C) 2019 PCSX-Redux authors                                 *
+ *   Copyright (C) 2020 PCSX-Redux authors                                 *
  *                                                                         *
  *   This program is free software; you can redistribute it and/or modify  *
  *   it under the terms of the GNU General Public License as published by  *
@@ -19,11 +19,21 @@
 
 #pragma once
 
-typedef signed char int8_t;
-typedef signed short int16_t;
-typedef signed int int32_t;
-typedef unsigned char uint8_t;
-typedef unsigned short uint16_t;
-typedef unsigned int uint32_t;
-typedef int32_t intptr_t;
-typedef uint32_t uintptr_t;
+#include "common/compiler/stdint.h"
+
+struct DMARegisters {
+    volatile uintptr_t MADR;
+    volatile uint32_t BCR, CHCR, padding;
+};
+
+#define DMA_CTRL ((volatile struct DMARegisters *) 0x1f801080)
+
+enum {
+    DMA_MDECIN  = 0,
+    DMA_MDECOUT = 1,
+    DMA_GPU     = 2,
+    DMA_CDROM   = 3,
+    DMA_SPU     = 4,
+    DMA_PIO     = 5,
+    DMA_GPUOTC  = 6,
+};
