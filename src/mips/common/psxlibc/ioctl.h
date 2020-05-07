@@ -1,5 +1,5 @@
 /***************************************************************************
- *   Copyright (C) 2019 PCSX-Redux authors                                 *
+ *   Copyright (C) 2020 PCSX-Redux authors                                 *
  *                                                                         *
  *   This program is free software; you can redistribute it and/or modify  *
  *   it under the terms of the GNU General Public License as published by  *
@@ -19,11 +19,23 @@
 
 #pragma once
 
-typedef signed char int8_t;
-typedef signed short int16_t;
-typedef signed int int32_t;
-typedef unsigned char uint8_t;
-typedef unsigned short uint16_t;
-typedef unsigned int uint32_t;
-typedef int32_t intptr_t;
-typedef uint32_t uintptr_t;
+#define MAKEIOCTL(c, s) ((c << 8 | s))
+
+#define PSXFIOCNBLOCK MAKEIOCTL('f', 1)
+#define PSXFIOCSCAN   MAKEIOCTL('f', 2)
+
+#define PSXTIOCRAW    MAKEIOCTL('t', 1)
+#define PSXTIOCFLUSH  MAKEIOCTL('t', 2)
+#define PSXTIOCREOPEN MAKEIOCTL('t', 3)
+#define PSXTIOCBAUD   MAKEIOCTL('t', 4)
+#define PSXTIOCEXIT   MAKEIOCTL('t', 5)
+#define PSXTIOCDTR    MAKEIOCTL('t', 6)
+#define PSXTIOCRTS    MAKEIOCTL('t', 7)
+#define PSXTIOCLEN    MAKEIOCTL('t', 8)
+#define PSXTIOCPARITY MAKEIOCTL('t', 9)
+#define PSXTIOSTATUS  MAKEIOCTL('t', 10)
+#define PSXTIOERRRST  MAKEIOCTL('t', 11)
+#define PSXTIOEXIST   MAKEIOCTL('t', 12)
+#define PSXTIORLEN    MAKEIOCTL('t', 13)
+
+#define PSXDIOFORMAT  MAKEIOCTL('d', 1)

@@ -1,5 +1,5 @@
 /***************************************************************************
- *   Copyright (C) 2019 PCSX-Redux authors                                 *
+ *   Copyright (C) 2020 PCSX-Redux authors                                 *
  *                                                                         *
  *   This program is free software; you can redistribute it and/or modify  *
  *   it under the terms of the GNU General Public License as published by  *
@@ -19,11 +19,12 @@
 
 #pragma once
 
-typedef signed char int8_t;
-typedef signed short int16_t;
-typedef signed int int32_t;
-typedef unsigned char uint8_t;
-typedef unsigned short uint16_t;
-typedef unsigned int uint32_t;
-typedef int32_t intptr_t;
-typedef uint32_t uintptr_t;
+#include <stdint.h>
+
+static __inline__ void pcsx_putc(int c) { *((volatile char * const) 0x1f802080) = c; }
+static __inline__ void pcsx_debugbreak() { *((volatile char * const) 0x1f802081) = 0; }
+static __inline__ void pcsx_exit(int code) { *((volatile int16_t * const) 0x1f802082) = code; }
+
+static __inline__ int pcsx_present() {
+    return *((volatile uint32_t * const) 0x1f802080) == 0x58534350;
+}
