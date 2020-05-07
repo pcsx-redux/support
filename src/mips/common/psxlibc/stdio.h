@@ -1,5 +1,5 @@
 /***************************************************************************
- *   Copyright (C) 2019 PCSX-Redux authors                                 *
+ *   Copyright (C) 2020 PCSX-Redux authors                                 *
  *                                                                         *
  *   This program is free software; you can redistribute it and/or modify  *
  *   it under the terms of the GNU General Public License as published by  *
@@ -20,13 +20,75 @@
 #pragma once
 
 #include "common/compiler/stdint.h"
+#include "common/psxlibc/device.h"
 
-static __inline__ uint32_t readCOP0Status() {
-    uint32_t ret;
-    asm("mfc0 %0, $12\nnop\n" : "=r"(ret));
-    return ret;
-}
+enum {
+    PSXENOERR,
+    PSXEPERM,
+    PSXENOENT,
+    PSXESRCH,
+    PSXEINTR,
+    PSXEIO,
+    PSXENXIO,
+    PSXE2BIG,
+    PSXENOEXEC,
+    PSXEBADF,
+    PSXECHILD,
+    PSXEAGAIN,
+    PSXENOMEM,
+    PSXEACCESS,
+    PSXEFAULT,
+    PSXENOTBLK,
+    PSXEBUSY,
+    PSXEEXIST,
+    PSXEXDEV,
+    PSXENODEV,
+    PSXENOTDIR,
+    PSXEISDIR,
+    PSXEINVAL,
+    PSXENFILE,
+    PSXEMFILE,
+    PSXENOTTY,
+    PSXETXTBSY,
+    PSXEFBIG,
+    PSXENOSPC,
+    PSXESPIPE,
+    PSXEROFS,
+    PSXEFORMAT,
+    PSXEPIPE,
+    PSXEDOM,
+    PSXERANGE,
+    PSXEWOULDBLOCK,
+    PSXEINPROGRESS,
+    PSXEALREADY,
+};
 
-static __inline__ void writeCOP0Status(uint32_t status) {
-    asm("mtc0 %0, $12\nnop\n" : : "r"(status));
-}
+enum {
+    PSXF_READ   = 0x0001,
+    PSXF_WRITE  = 0x0002,
+    PSXF_NBLOCK = 0x0004,
+    PSXF_SCAN   = 0x0008,
+    PSXF_RLOCK  = 0x0010,
+    PSXF_WLOCK  = 0x0020,
+    PSXF_APPEND = 0x0100,
+    PSXF_CREAT  = 0x0200,
+    PSXF_TRUNC  = 0x0400,
+    PSXF_SCAN2  = 0x1000,
+    PSXF_RCOM   = 0x2000,
+    PSXF_NBUF   = 0x4000,
+    PSXF_ASYNC  = 0x8000,
+};
+
+enum {
+    PSXSEEK_SET = 0,
+    PSXSEEK_CUR = 1,
+    PSXSEEK_END = 2,
+};
+
+struct File {
+    uint32_t flags /* PSXF_* */, deviceId;
+    char * buffer;
+    uint32_t count, offset, deviceFlags, errno;
+    struct Device * device;
+    uint32_t length, LBA, fd;
+};

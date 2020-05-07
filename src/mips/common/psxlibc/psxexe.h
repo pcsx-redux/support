@@ -1,5 +1,5 @@
 /***************************************************************************
- *   Copyright (C) 2019 PCSX-Redux authors                                 *
+ *   Copyright (C) 2020 PCSX-Redux authors                                 *
  *                                                                         *
  *   This program is free software; you can redistribute it and/or modify  *
  *   it under the terms of the GNU General Public License as published by  *
@@ -19,11 +19,23 @@
 
 #pragma once
 
-typedef signed char int8_t;
-typedef signed short int16_t;
-typedef signed int int32_t;
-typedef unsigned char uint8_t;
-typedef unsigned short uint16_t;
-typedef unsigned int uint32_t;
-typedef int32_t intptr_t;
-typedef uint32_t uintptr_t;
+#include "common/compiler/stdint.h"
+
+struct psxExeHeader {
+    uint32_t pc;
+    uint32_t gp;
+    uint32_t text_addr;
+    uint32_t text_size;
+    uint32_t data_addr;
+    uint32_t data_size;
+    uint32_t bss_addr;
+    uint32_t bss_size;
+    uint32_t stack_start;
+    uint32_t stack_size;
+    uint32_t savedSP;
+    uint32_t savedS8;
+    uint32_t savedGP;
+    uint32_t savedRA;
+    uint32_t savedS0;
+    uint32_t unknown;
+};
