@@ -2,7 +2,7 @@
 
 MIT License
 
-Copyright (c) 2019 PCSX-Redux authors
+Copyright (c) 2020 PCSX-Redux authors
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -29,7 +29,7 @@ SOFTWARE.
     .section .start, "ax", @progbits
     .set noreorder
     .align 2
-    .global main
+    .global _ucsdk_start
     .global _start
     .type _start, @function
 
@@ -59,6 +59,5 @@ bss_init:
 
 bss_init_skip:
 
-    li    $a0, 0
-    j     main
-    li    $a1, 0
+    j     _ucsdk_start
+    nop
