@@ -19,6 +19,36 @@
 
 #pragma once
 
-#ifdef _WIN32
-typedef intptr_t ssize_t;
-#endif
+#include <zlib.h>
+
+#include "support/file.h"
+
+namespace PCSX {
+
+class ZReader : public File {
+  public:
+    ZReader(IO<File> file) : File(RO_SEEKABLE), m_file(file) {
+        m_infstream.zalloc = Z_NULL;
+        m_infstream.zfree = Z_NULL;
+        m_infstream.opaque = Z_NULL;
+        m_infstream.avail_in = 0;
+        auto res = inflateInit(&m_infstream);
+        if (res != Z_OK) throw std::runtime_error("inflateInit didn't work");
+    }
+    virtual void close() final override { inflateEnd(&m_infstream); }
+    virtual ssize_t rSeek(ssize_t pos, int wheel) final override;
+    virtual ssize_t rTell() final override { return m_filePtr; }
+    virtual ssize_t read(void* dest, size_t size) final override;
+    virtual bool eof() final override { return m_hitEOF; }
+    virtual File* dup() final override { return new ZReader(m_file); };
+    virtual bool failed() final override { return m_file->failed(); }
+
+  private:
+    IO<File> m_file;
+    z_stream m_infstream;
+    ssize_t m_filePtr = 0;
+    bool m_hitEOF = false;
+    uint8_t m_inBuffer[1024];
+};
+
+}  // namespace PCSX

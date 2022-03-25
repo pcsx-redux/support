@@ -19,6 +19,13 @@
 
 #pragma once
 
-#ifdef _WIN32
-typedef intptr_t ssize_t;
-#endif
+#include <string>
+#include <string_view>
+
+namespace PCSX {
+namespace Sjis {
+
+std::string toUtf8(std::string_view str);
+
+}  // namespace Sjis
+}  // namespace PCSX
