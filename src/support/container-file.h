@@ -19,50 +19,40 @@
 
 #pragma once
 
-#include "support/sjis_conv.h"
+#include "support/file.h"
 
-#include "mips/common/util/sjis-table.h"
+namespace PCSX {
 
-std::string PCSX::Sjis::toUtf8(const std::string_view& str) {
-    std::string ret;
-    constexpr unsigned tableSize = sizeof(c_sjisToUnicodeConvTable) / sizeof(c_sjisToUnicodeConvTable[0]);
-    for (size_t i = 0; i < str.length(); i++) {
-        uint8_t c = str[i];
-        uint32_t index = 0;
-        switch (c >> 4) {
-            case 8:
-                index = 0x100;
-                break;
-            case 9:
-                index = 0x1100;
-                break;
-            case 14:
-                index = 0x2100;
-                break;
-        }
+class FileAsContainer;
 
-        if (index != 0) {
-            index += (c & 0x0f) << 8;
-            i++;
-            if (i >= str.length()) break;
-            c = str[i];
-        }
+struct FileIterator {
+    using difference_type = std::ptrdiff_t;
+    using value_type = char;
+    using pointer = const char*;
+    using reference = const char&;
+    using iterator_category = std::input_iterator_tag;
 
-        index += c;
+    FileIterator& operator++();
+    reference operator*() const;
+    bool operator!=(const FileIterator& rhs) const { return rhs.target != target; }
+    FileAsContainer* target = nullptr;
+};
 
-        if (index >= tableSize) continue;
-        uint16_t v = c_sjisToUnicodeConvTable[index];
-        if (v < 0x80) {
-            ret += v;
-        } else if (v < 0x800) {
-            ret += 0xc0 | (v >> 6);
-            ret += 0x80 | (v & 0x3f);
-        } else {
-            ret += 0xe0 | (v >> 12);
-            ret += 0x80 | ((v & 0xfff) >> 6);
-            ret += 0x80 | (v & 0x3f);
-        }
+class FileAsContainer {
+  public:
+    FileAsContainer(IO<File> file) : m_file(file) {}
+    void advance() { m_ptr++; }
+    const char& getCurrent() {
+        m_current = m_file->readAt<char>(m_ptr);
+        return m_current;
     }
+    FileIterator begin() { return FileIterator{this}; }
+    FileIterator end() { return {}; }
 
-    return ret;
-}
+  private:
+    IO<File> m_file;
+    size_t m_ptr = 0;
+    char m_current;
+};
+
+}  // namespace PCSX
