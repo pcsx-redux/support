@@ -19,50 +19,46 @@
 
 #pragma once
 
-#include "support/sjis_conv.h"
+#include <cstring>
+#include <istream>
+#include <ostream>
+#include <streambuf>
 
-#include "mips/common/util/sjis-table.h"
+#include "support/file.h"
 
-std::string PCSX::Sjis::toUtf8(const std::string_view& str) {
-    std::string ret;
-    constexpr unsigned tableSize = sizeof(c_sjisToUnicodeConvTable) / sizeof(c_sjisToUnicodeConvTable[0]);
-    for (size_t i = 0; i < str.length(); i++) {
-        uint8_t c = str[i];
-        uint32_t index = 0;
-        switch (c >> 4) {
-            case 8:
-                index = 0x100;
-                break;
-            case 9:
-                index = 0x1100;
-                break;
-            case 14:
-                index = 0x2100;
-                break;
-        }
+namespace PCSX {
 
-        if (index != 0) {
-            index += (c & 0x0f) << 8;
-            i++;
-            if (i >= str.length()) break;
-            c = str[i];
-        }
+template <class CharType, class traits = std::char_traits<CharType> >
+class BasicFileStreamBuf : public std::basic_streambuf<CharType, traits> {
+  public:
+    BasicFileStreamBuf(IO<File> file) : m_file(file) {}
 
-        index += c;
+  private:
+    virtual typename traits::int_type overflow(typename traits::int_type c) override {
+        if (traits::eq_int_type(c, traits::eof())) return traits::not_eof(c);
 
-        if (index >= tableSize) continue;
-        uint16_t v = c_sjisToUnicodeConvTable[index];
-        if (v < 0x80) {
-            ret += v;
-        } else if (v < 0x800) {
-            ret += 0xc0 | (v >> 6);
-            ret += 0x80 | (v & 0x3f);
-        } else {
-            ret += 0xe0 | (v >> 12);
-            ret += 0x80 | ((v & 0xfff) >> 6);
-            ret += 0x80 | (v & 0x3f);
-        }
+        CharType ch = c;
+        if (m_file->write(&ch, sizeof(ch)) != sizeof(ch)) return traits::eof();
+        return traits::not_eof(c);
+    }
+    virtual std::streamsize xsputn(const CharType* s, std::streamsize count) override {
+        return m_file->write(s, count);
     }
 
-    return ret;
-}
+  public:
+    IO<File> m_file;
+};
+
+template <class CharType, class traits = std::char_traits<CharType> >
+class BasicFileOStream : public std::basic_ostream<CharType, traits> {
+  public:
+    BasicFileOStream(IO<File> file)
+        : std::basic_ios<CharType, traits>(&m_sbuf), std::basic_ostream<CharType, traits>(&m_sbuf), m_sbuf(file) {}
+
+  private:
+    BasicFileStreamBuf<CharType, traits> m_sbuf;
+};
+
+typedef BasicFileOStream<char> FileOStream;
+
+}  // namespace PCSX
