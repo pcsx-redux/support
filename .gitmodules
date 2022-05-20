@@ -16,6 +16,3 @@
 [submodule "third_party/expected"]
 	path = third_party/expected
 	url = https://github.com/TartanLlama/expected.git
-[submodule "multipart-parser-c"]
-	path = multipart-parser-c
-	url = https://github.com/iafonov/multipart-parser-c.git
