@@ -30,7 +30,7 @@ namespace PCSX {
 
 namespace BinaryLoader {
 
-enum class Region { NTSC, PAL };
+enum class Region { UNKNOWN, NTSC, PAL };
 struct Info {
     std::optional<Region> region;
     std::optional<uint32_t> pc;
