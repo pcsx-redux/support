@@ -17,8 +17,13 @@
  *   51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.           *
  ***************************************************************************/
 
-#include "supportpsx/ps1-packer.h"
+#include <assert.h>
+#include <memory.h>
+#include <stdint.h>
 
+#include <vector>
+
+#include "elfio/elfio.hpp"
 #include "flags.h"
 #include "fmt/format.h"
 #include "support/file.h"
@@ -30,43 +35,20 @@ int main(int argc, char** argv) {
     auto output = args.get<std::string>("o");
 
     fmt::print(R"(
-ps1-packer by Nicolas "Pixel" Noble
-https://github.com/grumpycoders/pcsx-redux/tree/main/tools/ps1-packer/
+exe2elf by Nicolas "Pixel" Noble
+https://github.com/grumpycoders/pcsx-redux/tree/main/tools/exe2elf/
 )");
 
     auto inputs = args.positional();
     const bool asksForHelp = args.get<bool>("h").value_or(false);
     const bool hasOutput = output.has_value();
-    const uint32_t tload = std::stoul(args.get<std::string>("tload").value_or("0"), nullptr, 0);
     const bool oneInput = inputs.size() == 1;
-    const bool shell = args.get<bool>("shell").value_or(false);
-    const bool raw = args.get<bool>("raw").value_or(false);
-    const bool booty = args.get<bool>("booty").value_or(false);
-    const bool rom = args.get<bool>("rom").value_or(false);
-    const bool cpe = args.get<bool>("cpe").value_or(false);
-    unsigned outputTypeCount = (raw ? 1 : 0) + (booty ? 1 : 0) + (rom ? 1 : 0) + (cpe ? 1 : 0);
-    if (asksForHelp || !oneInput || !hasOutput || (outputTypeCount > 1)) {
+    if (asksForHelp || !oneInput || !hasOutput) {
         fmt::print(R"(
-Usage: {} input.ps-exe [-h] [-tload addr] [-shell] [-raw | -booty | -rom | -cpe] -o output.ps-exe
-  input.ps-exe      mandatory: specify the input binary file.
-  -o output.ps-exe  mandatory: name of the output file.
+Usage: {} input.ps-exe [-h] -o output.elf
+  input.ps-exe      mandatory: specify the input ps-exe file.
+  -o output.elf     mandatory: name of the output file.
   -h                displays this help information and exit.
-  -tload            force loading at this address instead of doing in-place.
-  -shell            adds a kernel reset stub.
-
-These options control the output format, and are mutually exclusive:
-  -raw              outputs a raw file.
-  -booty            outputs a counter-booty payload.
-  -rom              outputs a bootable rom, which can be used in a cheat cart.
-  -cpe              outputs a CPE file instead of a ps-exe one.
-If none of these options is provided, a ps-exe file will be emitted by default.
-
-Valid input binary files can be in the following formats:
- - PS-EXE (needs the "PS-X EXE" signature)
- - ELF
- - CPE
- - PSF
- - MiniPSF
 )",
                    argv[0]);
         return -1;
@@ -91,27 +73,29 @@ Valid input binary files can be in the following formats:
         return -1;
     }
 
-    PCSX::PS1Packer::Options options;
-    options.booty = booty;
-    options.raw = raw;
-    options.rom = rom;
-    options.cpe = cpe;
-    options.shell = shell;
-    options.tload = tload;
-    PCSX::IO<PCSX::File> out(new PCSX::PosixFile(output.value().c_str(), PCSX::FileOps::TRUNCATE));
-    PCSX::PS1Packer::pack(new PCSX::SubFile(memory, memory->lowestAddress(), memory->actualSize()), out,
-                          memory->lowestAddress(), info.pc.value_or(0), info.gp.value_or(0), info.sp.value_or(0),
-                          options);
+    std::vector<uint8_t> dataIn;
+    dataIn.resize(memory->actualSize());
+    memory->readAt(dataIn.data(), dataIn.size(), memory->actualSize());
+    while ((dataIn.size() & 3) != 0) dataIn.push_back(0);
+    ELFIO::elfio writer;
 
-    fmt::print(R"(
-Input file: {}
-pc: 0x{:08x}  gp: 0x{:08x}  sp: 0x{:08x}
-file size: {} -> {}
+    writer.create(ELFCLASS32, ELFDATA2LSB);
+    writer.set_os_abi(ELFOSABI_NONE);
+    writer.set_type(ET_EXEC);
+    writer.set_machine(EM_MIPS);
 
-File {} created. All done.
-)",
-               input, info.pc.value_or(0), info.gp.value_or(0), info.sp.value_or(0), file->size(), out->size(),
-               output.value());
+    ELFIO::section* text = writer.sections.add(".text");
+    text->set_type(SHT_PROGBITS);
+    text->set_flags(SHF_ALLOC | SHF_EXECINSTR);
+    text->set_addr_align(4);
+    text->set_data(reinterpret_cast<char*>(dataIn.data()), dataIn.size());
+    text->set_address(memory->lowestAddress());
+
+    writer.set_entry(info.pc.value());
+
+    writer.save(output.value());
+
+    fmt::print("File {} created. All done.\n", output.value());
 
     return 0;
 }
