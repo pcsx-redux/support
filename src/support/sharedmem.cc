@@ -24,41 +24,11 @@ SOFTWARE.
 
 */
 
-#pragma once
+#include "support/sharedmem.h"
 
-#define IMGUI_DEFINE_MATH_OPERATORS
+#include "fmt/format.h"
 
-#include "imgui.h"
-
-namespace PCSX {
-namespace ImGuiHelpers {
-
-static void normalizeDimensions(ImVec2& vec, float ratio) {
-    float r = vec.y / vec.x;
-    if (r > ratio) {
-        vec.y = vec.x * ratio;
-    } else {
-        vec.x = vec.y / ratio;
-    }
-    vec.x = roundf(vec.x);
-    vec.y = roundf(vec.y);
-    vec.x = std::max(vec.x, 1.0f);
-    vec.y = std::max(vec.y, 1.0f);
+std::string PCSX::SharedMem::getSharedName(const char* id, uint32_t pid) {
+    // Example name: pcsx-redux-wram-37045
+    return fmt::format("pcsx-redux-{}-{}", id, pid);
 }
-
-static void ShowHelpMarker(const char* desc) {
-    ImGui::SameLine();
-    ImGui::PushStyleColor(ImGuiCol_Text, ImGui::GetStyle().Colors[ImGuiCol_TextDisabled]);
-    ImGui::TextUnformatted("(?)");
-    ImGui::PopStyleColor();
-    if (ImGui::IsItemHovered()) {
-        ImGui::BeginTooltip();
-        ImGui::PushTextWrapPos(ImGui::GetFontSize() * 35.0f);
-        ImGui::TextUnformatted(desc);
-        ImGui::PopTextWrapPos();
-        ImGui::EndTooltip();
-    }
-}
-
-}  // namespace ImGuiHelpers
-}  // namespace PCSX

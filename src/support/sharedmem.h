@@ -26,39 +26,39 @@ SOFTWARE.
 
 #pragma once
 
-#define IMGUI_DEFINE_MATH_OPERATORS
+#include <stdint.h>
 
-#include "imgui.h"
+#include <string>
 
 namespace PCSX {
-namespace ImGuiHelpers {
 
-static void normalizeDimensions(ImVec2& vec, float ratio) {
-    float r = vec.y / vec.x;
-    if (r > ratio) {
-        vec.y = vec.x * ratio;
-    } else {
-        vec.x = vec.y / ratio;
-    }
-    vec.x = roundf(vec.x);
-    vec.y = roundf(vec.y);
-    vec.x = std::max(vec.x, 1.0f);
-    vec.y = std::max(vec.y, 1.0f);
-}
+class SharedMem {
+  public:
+    SharedMem() {}
+    ~SharedMem();
 
-static void ShowHelpMarker(const char* desc) {
-    ImGui::SameLine();
-    ImGui::PushStyleColor(ImGuiCol_Text, ImGui::GetStyle().Colors[ImGuiCol_TextDisabled]);
-    ImGui::TextUnformatted("(?)");
-    ImGui::PopStyleColor();
-    if (ImGui::IsItemHovered()) {
-        ImGui::BeginTooltip();
-        ImGui::PushTextWrapPos(ImGui::GetFontSize() * 35.0f);
-        ImGui::TextUnformatted(desc);
-        ImGui::PopTextWrapPos();
-        ImGui::EndTooltip();
-    }
-}
+    /**
+     * Returns true if:
+     *  - the memory was sucessfully shared with the given ID, or
+     *  - no ID was given and a raw alloc was performed
+     * Returns false if:
+     *  - the memory failed to successfully share and defaulted to a raw alloc
+     */
+    bool init(const char* id, size_t size, bool initToZero);
 
-}  // namespace ImGuiHelpers
+    uint8_t* getPtr() { return m_mem; }
+    size_t getSize() { return m_size; }
+
+  private:
+    std::string getSharedName(const char* id, uint32_t pid);
+
+  private:
+    uint8_t* m_mem = nullptr;
+    size_t m_size = 0;
+
+    void* m_fileHandle = nullptr;
+    std::string m_sharedName;
+    int m_fd = -1;
+};
+
 }  // namespace PCSX
