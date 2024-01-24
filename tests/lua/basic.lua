@@ -23,6 +23,11 @@ function TestBasic:test_basic()
     lu.assertEquals(1, 1)
 end
 
-local runner = lu.LuaUnit.new()
-runner:setOutputType 'text'
-PCSX.quit(runner:runSuite())
+function TestBasic:test_coroutine()
+    local testCoroutine = coroutine.running()
+    PCSX.nextTick(function()
+        coroutine.resume(testCoroutine, 42)
+    end)
+    local r = coroutine.yield()
+    lu.assertEquals(r, 42)
+end
