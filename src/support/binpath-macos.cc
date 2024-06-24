@@ -2,7 +2,7 @@
 
 MIT License
 
-Copyright (c) 2019 PCSX-Redux authors
+Copyright (c) 2024 PCSX-Redux authors
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -24,31 +24,23 @@ SOFTWARE.
 
 */
 
-#pragma once
+#include "binpath.h"
 
-#include <stdint.h>
+#if defined(__APPLE__) && defined(__MACH__)
 
-enum IRQ {
-    IRQ_VBLANK_NUMBER = 0,
-    IRQ_VBLANK = 1 << IRQ_VBLANK_NUMBER,
-    IRQ_GPU_NUMBER = 1,
-    IRQ_GPU = 1 << IRQ_GPU_NUMBER,
-    IRQ_CDROM_NUMBER = 2,
-    IRQ_CDROM = 1 << IRQ_CDROM_NUMBER,
-    IRQ_DMA_NUMBER = 3,
-    IRQ_DMA = 1 << IRQ_DMA_NUMBER,
-    IRQ_TIMER0_NUMBER = 4,
-    IRQ_TIMER0 = 1 << IRQ_TIMER0_NUMBER,
-    IRQ_TIMER1_NUMBER = 5,
-    IRQ_TIMER1 = 1 << IRQ_TIMER1_NUMBER,
-    IRQ_TIMER2_NUMBER = 6,
-    IRQ_TIMER2 = 1 << IRQ_TIMER2_NUMBER,
-    IRQ_CONTROLLER_NUMBER = 7,
-    IRQ_CONTROLLER = 1 << IRQ_CONTROLLER_NUMBER,
-    IRQ_SIO_NUMBER = 8,
-    IRQ_SIO = 1 << IRQ_SIO_NUMBER,
-    IRQ_SPU_NUMBER = 9,
-    IRQ_SPU = 1 << IRQ_SPU_NUMBER,
-    IRQ_PIO_NUMBER = 10,
-    IRQ_PIO = 1 << IRQ_PIO_NUMBER,
-};
+#include <CoreFoundation/CoreFoundation.h>
+
+#include <stdexcept>
+
+std::u8string PCSX::BinPath::getExecutablePath() {
+    CFBundleRef mainBundle = CFBundleGetMainBundle();
+    CFURLRef execURL = CFBundleCopyExecutableURL(mainBundle);
+    char8_t path[PATH_MAX];
+    if (!CFURLGetFileSystemRepresentation(execURL, TRUE, (UInt8 *)path, PATH_MAX)) {
+        throw std::runtime_error("Could not get executable path");
+    }
+    CFRelease(execURL);
+    return std::u8string(path);
+}
+
+#endif
