@@ -2,7 +2,7 @@
 
 MIT License
 
-Copyright (c) 2019 PCSX-Redux authors
+Copyright (c) 2024 PCSX-Redux authors
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -24,31 +24,20 @@ SOFTWARE.
 
 */
 
-#pragma once
+// Needs to stay on top
+#include "windowswrapper.h"
+// Because MSVC is a special snowflake
+#include "binpath.h"
 
-#include <stdint.h>
+#ifdef _WIN32
 
-enum IRQ {
-    IRQ_VBLANK_NUMBER = 0,
-    IRQ_VBLANK = 1 << IRQ_VBLANK_NUMBER,
-    IRQ_GPU_NUMBER = 1,
-    IRQ_GPU = 1 << IRQ_GPU_NUMBER,
-    IRQ_CDROM_NUMBER = 2,
-    IRQ_CDROM = 1 << IRQ_CDROM_NUMBER,
-    IRQ_DMA_NUMBER = 3,
-    IRQ_DMA = 1 << IRQ_DMA_NUMBER,
-    IRQ_TIMER0_NUMBER = 4,
-    IRQ_TIMER0 = 1 << IRQ_TIMER0_NUMBER,
-    IRQ_TIMER1_NUMBER = 5,
-    IRQ_TIMER1 = 1 << IRQ_TIMER1_NUMBER,
-    IRQ_TIMER2_NUMBER = 6,
-    IRQ_TIMER2 = 1 << IRQ_TIMER2_NUMBER,
-    IRQ_CONTROLLER_NUMBER = 7,
-    IRQ_CONTROLLER = 1 << IRQ_CONTROLLER_NUMBER,
-    IRQ_SIO_NUMBER = 8,
-    IRQ_SIO = 1 << IRQ_SIO_NUMBER,
-    IRQ_SPU_NUMBER = 9,
-    IRQ_SPU = 1 << IRQ_SPU_NUMBER,
-    IRQ_PIO_NUMBER = 10,
-    IRQ_PIO = 1 << IRQ_PIO_NUMBER,
-};
+std::u8string PCSX::BinPath::getExecutablePath() {
+    wchar_t path[MAX_PATH];
+    GetModuleFileNameW(nullptr, path, MAX_PATH);
+    auto needed = WideCharToMultiByte(CP_UTF8, 0, path, -1, NULL, 0, NULL, NULL);
+    std::u8string result(needed, 0);
+    WideCharToMultiByte(CP_UTF8, 0, path, -1, (LPSTR)result.data(), needed, NULL, NULL);
+    return result;
+}
+
+#endif
