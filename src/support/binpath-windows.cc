@@ -2,7 +2,7 @@
 
 MIT License
 
-Copyright (c) 2020 PCSX-Redux authors
+Copyright (c) 2024 PCSX-Redux authors
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -24,23 +24,20 @@ SOFTWARE.
 
 */
 
-#pragma once
+// Needs to stay on top
+#include "windowswrapper.h"
+// Because MSVC is a special snowflake
+#include "binpath.h"
 
-#include <stdint.h>
+#ifdef _WIN32
 
-struct DMARegisters {
-    uintptr_t MADR;
-    uint32_t BCR, CHCR, padding;
-};
+std::u8string PCSX::BinPath::getExecutablePath() {
+    wchar_t path[MAX_PATH];
+    GetModuleFileNameW(nullptr, path, MAX_PATH);
+    auto needed = WideCharToMultiByte(CP_UTF8, 0, path, -1, NULL, 0, NULL, NULL);
+    std::u8string result(needed, 0);
+    WideCharToMultiByte(CP_UTF8, 0, path, -1, (LPSTR)result.data(), needed, NULL, NULL);
+    return result;
+}
 
-#define DMA_CTRL ((volatile struct DMARegisters *)0x1f801080)
-
-enum {
-    DMA_MDECIN = 0,
-    DMA_MDECOUT = 1,
-    DMA_GPU = 2,
-    DMA_CDROM = 3,
-    DMA_SPU = 4,
-    DMA_PIO = 5,
-    DMA_GPUOTC = 6,
-};
+#endif

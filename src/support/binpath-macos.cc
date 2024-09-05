@@ -2,7 +2,7 @@
 
 MIT License
 
-Copyright (c) 2020 PCSX-Redux authors
+Copyright (c) 2024 PCSX-Redux authors
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -24,23 +24,23 @@ SOFTWARE.
 
 */
 
-#pragma once
+#include "binpath.h"
 
-#include <stdint.h>
+#if defined(__APPLE__) && defined(__MACH__)
 
-struct DMARegisters {
-    uintptr_t MADR;
-    uint32_t BCR, CHCR, padding;
-};
+#include <CoreFoundation/CoreFoundation.h>
 
-#define DMA_CTRL ((volatile struct DMARegisters *)0x1f801080)
+#include <stdexcept>
 
-enum {
-    DMA_MDECIN = 0,
-    DMA_MDECOUT = 1,
-    DMA_GPU = 2,
-    DMA_CDROM = 3,
-    DMA_SPU = 4,
-    DMA_PIO = 5,
-    DMA_GPUOTC = 6,
-};
+std::u8string PCSX::BinPath::getExecutablePath() {
+    CFBundleRef mainBundle = CFBundleGetMainBundle();
+    CFURLRef execURL = CFBundleCopyExecutableURL(mainBundle);
+    char8_t path[PATH_MAX];
+    if (!CFURLGetFileSystemRepresentation(execURL, TRUE, (UInt8 *)path, PATH_MAX)) {
+        throw std::runtime_error("Could not get executable path");
+    }
+    CFRelease(execURL);
+    return std::u8string(path);
+}
+
+#endif
