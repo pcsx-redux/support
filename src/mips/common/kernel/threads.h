@@ -2,7 +2,7 @@
 
 MIT License
 
-Copyright (c) 2020 PCSX-Redux authors
+Copyright (c) 2024 PCSX-Redux authors
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -28,19 +28,28 @@ SOFTWARE.
 
 #include <stdint.h>
 
-struct DMARegisters {
-    uintptr_t MADR;
-    uint32_t BCR, CHCR, padding;
+struct Registers {
+    union {
+        struct {
+            uint32_t r0, at, v0, v1, a0, a1, a2, a3;
+            uint32_t t0, t1, t2, t3, t4, t5, t6, t7;
+            uint32_t s0, s1, s2, s3, s4, s5, s6, s7;
+            uint32_t t8, t9, k0, k1, gp, sp, fp, ra;
+        } n;
+        uint32_t r[32];
+    } GPR;
+    uint32_t returnPC;
+    uint32_t hi, lo;
+    uint32_t SR;
+    uint32_t Cause;
 };
 
-#define DMA_CTRL ((volatile struct DMARegisters *)0x1f801080)
+struct Thread {
+    uint32_t flags, flags2;
+    struct Registers registers;
+    uint32_t unknown[9];
+};
 
-enum {
-    DMA_MDECIN = 0,
-    DMA_MDECOUT = 1,
-    DMA_GPU = 2,
-    DMA_CDROM = 3,
-    DMA_SPU = 4,
-    DMA_PIO = 5,
-    DMA_GPUOTC = 6,
+struct Process {
+    struct Thread* thread;
 };
