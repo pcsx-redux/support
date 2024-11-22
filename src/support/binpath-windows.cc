@@ -2,7 +2,7 @@
 
 MIT License
 
-Copyright (c) 2023 PCSX-Redux authors
+Copyright (c) 2024 PCSX-Redux authors
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -24,43 +24,20 @@ SOFTWARE.
 
 */
 
-#pragma once
+// Needs to stay on top
+#include "windowswrapper.h"
+// Because MSVC is a special snowflake
+#include "binpath.h"
 
-#include <bit>
-#include <concepts>
-#include <version>
+#ifdef _WIN32
 
-#ifdef _MSC_VER
-#define POLYFILL_NO_UNIQUE_ADDRESS [[msvc::no_unique_address]]
-#else
-#define POLYFILL_NO_UNIQUE_ADDRESS [[no_unique_address]]
-#endif
-
-namespace PCSX {
-
-namespace PolyFill {
-
-// MacOS / AppleClang is bad.
-template <class T>
-concept IntegralConcept = std::is_integral<T>::value;
-
-template <IntegralConcept T>
-static constexpr T byteSwap(T val) {
-#if defined(__cpp_lib_byteswap) && (__cpp_lib_byteswap >= 202110L)
-    return std::byteswap<T>(val);
-#else
-    if constexpr (sizeof(T) == 1) {
-        return val;
-    } else {
-        T ret = 0;
-        for (size_t i = 0; i < sizeof(T); i++) {
-            ret |= static_cast<T>(static_cast<uint8_t>(val >> (i * 8)) << ((sizeof(T) - i - 1) * 8));
-        }
-        return ret;
-    }
-#endif
+std::u8string PCSX::BinPath::getExecutablePath() {
+    wchar_t path[MAX_PATH];
+    GetModuleFileNameW(nullptr, path, MAX_PATH);
+    auto needed = WideCharToMultiByte(CP_UTF8, 0, path, -1, NULL, 0, NULL, NULL);
+    std::u8string result(needed, 0);
+    WideCharToMultiByte(CP_UTF8, 0, path, -1, (LPSTR)result.data(), needed, NULL, NULL);
+    return result;
 }
 
-}  // namespace PolyFill
-
-}  // namespace PCSX
+#endif
