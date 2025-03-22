@@ -2,7 +2,7 @@
 
 MIT License
 
-Copyright (c) 2020 PCSX-Redux authors
+Copyright (c) 2022 PCSX-Redux authors
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -26,25 +26,29 @@ SOFTWARE.
 
 #pragma once
 
-#include <stdint.h>
-
-#include <string>
+#include "support/file.h"
+#include "supportpsx/iec-60908b.h"
 
 namespace PCSX {
 
-struct djb {
-  private:
-    static inline constexpr uint64_t process(uint64_t hash, const char str[], size_t n) {
-        return n ? process(((hash << 5) + hash) ^ static_cast<uint8_t>(str[0]), str + 1, n - 1) : hash;
+class ISO9660Builder {
+  public:
+    ISO9660Builder(IO<File> out) : m_out(out) {}
+    bool failed() { return !m_out || m_out->failed(); }
+    IEC60908b::MSF getCurrentLocation() { return m_location; }
+    void writeLicense(IO<File> licenseFile = nullptr);
+    IEC60908b::MSF writeSector(const uint8_t* sectorData, IEC60908b::SectorMode mode) {
+        return writeSectorAt(sectorData, m_location++, mode);
+    }
+    IEC60908b::MSF writeSectorAt(const uint8_t* sectorData, IEC60908b::MSF msf, IEC60908b::SectorMode mode);
+    void close() {
+        m_out->close();
+        m_out = nullptr;
     }
 
-  public:
-    template <size_t S>
-    static inline constexpr uint64_t ctHash(const char (&str)[S]) {
-        return process(5381, str, S - 1);
-    }
-    static inline constexpr uint64_t hash(const char *str, size_t n) { return process(5381, str, n); }
-    static inline uint64_t hash(const std::string &str) { return process(5381, str.c_str(), str.length()); }
+  private:
+    IO<File> m_out;
+    IEC60908b::MSF m_location = {0, 2, 0};
 };
 
 }  // namespace PCSX
