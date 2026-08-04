@@ -2,7 +2,7 @@
 
 MIT License
 
-Copyright (c) 2023 PCSX-Redux authors
+Copyright (c) 2026 Nicolas "Pixel" Noble
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -26,26 +26,26 @@ SOFTWARE.
 
 #pragma once
 
-#include <cstddef>
-#include <cstdint>
-#include <optional>
+#include <stdint.h>
 
-#include "support/file.h"
+#ifdef __cplusplus
+extern "C" {
+#endif
 
-namespace PCSX::PS1Packer {
+// Recompute the sector's EDC and compare it to the stored value. Returns 1 if
+// the EDC matches (the user data is intact), 0 otherwise. Works for Mode 2
+// Form 1 and Form 2; any other sector type returns 1.
+int check_edc(const uint8_t* sector);
 
-struct Options {
-    uint32_t tload = 0;
-    bool shell = false;
-    bool nokernel = false;
-    bool resetstack = false;
-    bool nopad = false;
-    bool booty = false;
-    bool raw = false;
-    bool rom = false;
-    bool cpe = false;
-};
+// Attempt to repair a Mode 2 Form 1 sector in place using its P and Q ECC,
+// iterating the two channels until the EDC validates or no further progress is
+// possible. Returns:
+//    1  the sector is valid (was already clean, or was corrected)
+//    0  the sector could not be brought to a valid EDC (too much damage)
+// Form 2 sectors carry no ECC, so this returns whatever check_edc reports.
+// Non-Mode-2 sectors are left untouched and report 1.
+int correct_sector(uint8_t* sector);
 
-void pack(IO<File> src, IO<File> dest, uint32_t addr, uint32_t pc, uint32_t gp, uint32_t sp, const Options&);
-
-}  // namespace PCSX::PS1Packer
+#ifdef __cplusplus
+}
+#endif
