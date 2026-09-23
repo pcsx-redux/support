@@ -2,7 +2,7 @@
 
 MIT License
 
-Copyright (c) 2026 Nicolas "Pixel" Noble
+Copyright (c) 2026 PCSX-Redux authors
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -24,28 +24,33 @@ SOFTWARE.
 
 */
 
-#pragma once
+#include "utf8-decode.hh"
 
-#include <stdint.h>
-
-#ifdef __cplusplus
-extern "C" {
-#endif
-
-// Recompute the sector's EDC and compare it to the stored value. Returns 1 if
-// the EDC matches (the user data is intact), 0 otherwise. Works for Mode 2
-// Form 1 and Form 2; any other sector type returns 1.
-int check_edc(const uint8_t* sector);
-
-// Attempt to repair a Mode 2 Form 1 sector in place using its P and Q ECC,
-// iterating the two channels until the EDC validates or no further progress is
-// possible. Returns:
-//    1  the sector is valid (was already clean, or was corrected)
-//    0  the sector could not be brought to a valid EDC (too much damage)
-// Form 2 sectors carry no ECC, so this returns whatever check_edc reports.
-// Non-Mode-2 sectors are left untouched and report 1.
-int correct_sector(uint8_t* sector);
-
-#ifdef __cplusplus
+uint16_t Sjis::utf8Decode(const char* str, uint32_t length, uint32_t* index) {
+    uint32_t i = *index;
+    uint8_t c = str[i++];
+    uint32_t cp;
+    unsigned extra;
+    if (c < 0x80) {
+        *index = i;
+        return c;
+    } else if ((c & 0xe0) == 0xc0) {
+        cp = c & 0x1f;
+        extra = 1;
+    } else if ((c & 0xf0) == 0xe0) {
+        cp = c & 0x0f;
+        extra = 2;
+    } else {
+        *index = i;
+        return 0xfffd;
+    }
+    for (unsigned k = 0; k < extra; k++) {
+        if (i >= length || (str[i] & 0xc0) != 0x80) {
+            *index = i;
+            return 0xfffd;
+        }
+        cp = (cp << 6) | (str[i++] & 0x3f);
+    }
+    *index = i;
+    return cp > 0xffff ? 0xfffd : (uint16_t)cp;
 }
-#endif
