@@ -2,7 +2,7 @@
 
 MIT License
 
-Copyright (c) 2022 Nicolas "Pixel" Noble
+Copyright (c) 2021 PCSX-Redux authors
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -26,32 +26,39 @@ SOFTWARE.
 
 #pragma once
 
+#include <stdint.h>
+
 #ifdef __cplusplus
-extern "C" {
+
+#include <concepts>
+
+namespace Utilities {
+
+template <std::integral T, unsigned size = (sizeof(T) + 7) / 8>
+T loadUnaligned(const uint8_t *ptr) {
+    T ret = 0;
+    for (unsigned i = 0; i < size; i++) {
+        ret |= (ptr[i] << (i * 8));
+    }
+    return ret;
+}
+
+template <std::integral T, unsigned size = (sizeof(T) + 7) / 8>
+void storeUnaligned(uint8_t *ptr, T value) {
+    for (unsigned i = 0; i < size; i++) {
+        ptr[i] = value >> (i * 8);
+    }
+}
+
+}  // namespace Utilities
+
 #endif
 
-struct CueScheduler;
-
-struct CueClosure {
-    struct CueScheduler *scheduler;
-    void (*destroy)(struct CueClosure *);
-    void (*call)(struct CueClosure *);
-    struct CueClosure *next;
-};
-
-struct CueScheduler {
-    struct CueClosure *top;
-    void *opaque;
-};
-
-void Scheduler_construct(struct CueScheduler *);
-int Scheduler_hasPendingEvents(struct CueScheduler *);
-void Scheduler_processEvents(struct CueScheduler *);
-void Scheduler_schedule(struct CueScheduler *, struct CueClosure *);
-void Scheduler_run(struct CueScheduler *);
-void Scheduler_run_once(struct CueScheduler *);
-void Scheduler_run_one(struct CueScheduler *);
-
-#ifdef __cplusplus
+#ifdef __mips__
+static __inline__ uint32_t load32Unaligned(const void *in, int pos) {
+    const uint8_t *buffer = (const uint8_t *)in;
+    uint32_t r;
+    __builtin_memcpy(&r, buffer + pos, sizeof(uint32_t));
+    return r;
 }
 #endif
