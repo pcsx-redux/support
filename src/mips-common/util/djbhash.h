@@ -2,7 +2,7 @@
 
 MIT License
 
-Copyright (c) 2022 Nicolas "Pixel" Noble
+Copyright (c) 2019 PCSX-Redux authors
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -29,11 +29,31 @@ SOFTWARE.
 #include <stdint.h>
 
 #ifdef __cplusplus
-extern "C" {
-#endif
+#include <concepts>
 
-void compute_edcecc(uint8_t* sector);
+namespace djb {
 
-#ifdef __cplusplus
+template <std::integral T = uint32_t>
+static inline constexpr T process(T hash, const char str[], unsigned n) {
+    return n ? process(((hash << 5) + hash) ^ static_cast<uint8_t>(str[0]), str + 1, n - 1) : hash;
 }
+
+template <std::integral T = uint32_t>
+static inline T constexpr hash(const char* str, unsigned n) {
+    return process(T(5381), str, n);
+}
+
+template <std::integral T = uint32_t, unsigned S>
+static inline T constexpr hash(const char (&str)[S]) {
+    return process(T(5381), str, S - 1);
+}
+
+}  // namespace djb
+
 #endif
+
+static inline uint32_t djbProcess(uint32_t hash, const char str[], unsigned n) {
+    return n ? djbProcess(((hash << 5) + hash) ^ ((uint8_t)str[0]), str + 1, n - 1) : hash;
+}
+
+static inline uint32_t djbHash(const char* str, unsigned n) { return djbProcess(5381, str, n); }
