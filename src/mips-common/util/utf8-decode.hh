@@ -1,6 +1,8 @@
+/*
+
 MIT License
 
-Copyright (c) 2022 Nicolas "Pixel" Noble
+Copyright (c) 2026 PCSX-Redux authors
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -19,3 +21,23 @@ AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
 LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
+
+*/
+
+#pragma once
+
+#include <stdint.h>
+
+// Minimal, table-free UTF-8 codepoint decoder. Split out of sjis-encode.h so
+// that the lightweight (no conversion table) code paths can decode UTF-8
+// without dragging in the ~28kB Shift-JIS encoding table. Usable from both the
+// host and the MIPS targets.
+
+namespace Sjis {
+
+// Decodes one UTF-8 codepoint from str, advancing *index. Returns the codepoint,
+// or 0xfffd (replacement) on a malformed sequence. Codepoints above the BMP are
+// returned truncated to 0xfffd since Shift-JIS cannot represent them.
+uint16_t utf8Decode(const char* str, uint32_t length, uint32_t* index);
+
+}  // namespace Sjis
