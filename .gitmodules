@@ -28,3 +28,6 @@
 [submodule "third_party/cueparser"]
 	path = third_party/cueparser
 	url = https://github.com/pcsx-redux/cueparser.git
+[submodule "third_party/args"]
+	path = third_party/args
+	url = https://github.com/Taywee/args.git
