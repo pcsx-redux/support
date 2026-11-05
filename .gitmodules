@@ -28,3 +28,6 @@
 [submodule "src/mips"]
 	path = src/mips
 	url = https://github.com/pcsx-redux/nugget.git
+[submodule "src/pocketstation"]
+	path = src/pocketstation
+	url = https://github.com/pcsx-redux/pocketstation.git
